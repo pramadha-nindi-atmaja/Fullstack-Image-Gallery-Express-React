@@ -9,6 +9,8 @@ import { IoIosSave } from "react-icons/io";
 
 const EditProduct = () => {
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const navigate = useNavigate();
@@ -18,6 +20,8 @@ const EditProduct = () => {
     try {
       const out = await axios.get(`/api/products/${id}`);
       setName(out.data.response.name);
+      setDescription(out.data.response.description || "");
+      setCategory(out.data.response.category || "");
       setFile(out.data.response.image);
       setPreview(out.data.response.url);
     } catch (error) {
@@ -34,28 +38,64 @@ const EditProduct = () => {
 
   const loadImage = (e) => {
     const image = e.target.files[0];
+    if (!image) return;
+    
+    // File type validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(image.type)) {
+      toast.error("Invalid file type. Please upload a JPEG, JPG, PNG, or GIF image.", {
+        position: "top-center"
+      });
+      return;
+    }
+    
+    // File size validation (5MB max)
+    if (image.size > 5000000) {
+      toast.error("File size exceeds 5MB limit", {
+        position: "top-center"
+      });
+      return;
+    }
+    
     setFile(image);
     setPreview(URL.createObjectURL(image));
   };
 
   const editProduct = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!name.trim()) {
+      toast.error("Product name is required", {
+        position: "top-center"
+      });
+      return;
+    }
+    
     const data = new FormData();
     data.append("file", file);
-    data.append("name", name);
+    data.append("name", name.trim());
+    if (description.trim()) {
+      data.append("description", description.trim());
+    }
+    if (category.trim()) {
+      data.append("category", category.trim());
+    }
+    
     try {
       const out = await axios.put(`/api/products/${id}`, data, {
         headers: {
-          "Content-Type": "multipart/from-data",
+          "Content-Type": "multipart/form-data",
         },
       });
-      toast.info(out.data.message, {
+      toast.success(out.data.message, {
         position: "top-center",
       });
       navigate("/");
     } catch (error) {
-      const errMessage = JSON.parse(error.request.response);
-      toast.error(errMessage.message, {
+      const errorMessage = error.response?.data?.message || 
+                          "An error occurred while updating the product";
+      toast.error(errorMessage, {
         position: "top-center",
       });
     }
@@ -79,6 +119,35 @@ const EditProduct = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Product Name"
+                  />
+                </Col>
+              </Form.Group>
+
+              <Form.Group as={Row} className="mb-3" controlId="frmProductDescription">
+                <Form.Label column sm="2">
+                  Description
+                </Form.Label>
+                <Col sm="10">
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Product Description (optional)"
+                  />
+                </Col>
+              </Form.Group>
+
+              <Form.Group as={Row} className="mb-3" controlId="frmProductCategory">
+                <Form.Label column sm="2">
+                  Category
+                </Form.Label>
+                <Col sm="10">
+                  <Form.Control
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Product Category (optional)"
                   />
                 </Col>
               </Form.Group>
