@@ -87,6 +87,7 @@ const CardComponent = ({ product, getProducts }) => {
             onError={(e) => {
               e.target.src =
                 "https://via.placeholder.com/400x250?text=No+Image";
+              e.target.alt = "Image not available";
             }}
             onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
             onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
@@ -94,11 +95,21 @@ const CardComponent = ({ product, getProducts }) => {
         </div>
         <Card.Body className="d-flex flex-column justify-content-between">
           <Card.Title
-            className="text-truncate mb-3 fw-semibold"
+            className="text-truncate mb-1 fw-semibold"
             title={product.name}
           >
             {product.name}
           </Card.Title>
+          {product.description && (
+            <Card.Text className="text-muted mb-2" style={{ fontSize: '0.9rem' }}>
+              {product.description}
+            </Card.Text>
+          )}
+          {product.category && (
+            <div className="mb-3">
+              <span className="badge bg-primary">{product.category}</span>
+            </div>
+          )}
           <div className="text-end mt-auto">
             <Link
               to={`/edit/${product.id}`}
