@@ -8,6 +8,8 @@ import { IoIosSave } from "react-icons/io";
 const AddProduct = () => {
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
+    category: "",
     file: null
   });
   const [preview, setPreview] = useState(null);
@@ -25,6 +27,23 @@ const AddProduct = () => {
     const image = e.target.files[0];
     if (!image) return;
     
+    // File type validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(image.type)) {
+      toast.error("Invalid file type. Please upload a JPEG, JPG, PNG, or GIF image.", {
+        position: "top-center"
+      });
+      return;
+    }
+    
+    // File size validation (5MB max)
+    if (image.size > 5000000) {
+      toast.error("File size exceeds 5MB limit", {
+        position: "top-center"
+      });
+      return;
+    }
+    
     setFormData({
       ...formData,
       file: image
@@ -35,8 +54,33 @@ const AddProduct = () => {
   const saveProduct = async (e) => {
     e.preventDefault();
     
-    if (!formData.name.trim() || !formData.file) {
-      toast.error("Product name and image are required", {
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error("Product name is required", {
+        position: "top-center"
+      });
+      return;
+    }
+    
+    if (!formData.file) {
+      toast.error("Image is required", {
+        position: "top-center"
+      });
+      return;
+    }
+    
+    // File type validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(formData.file.type)) {
+      toast.error("Invalid file type. Please upload a JPEG, JPG, PNG, or GIF image.", {
+        position: "top-center"
+      });
+      return;
+    }
+    
+    // File size validation (5MB max)
+    if (formData.file.size > 5000000) {
+      toast.error("File size exceeds 5MB limit", {
         position: "top-center"
       });
       return;
@@ -44,12 +88,18 @@ const AddProduct = () => {
 
     const data = new FormData();
     data.append("file", formData.file);
-    data.append("name", formData.name);
+    data.append("name", formData.name.trim());
+    if (formData.description.trim()) {
+      data.append("description", formData.description.trim());
+    }
+    if (formData.category.trim()) {
+      data.append("category", formData.category.trim());
+    }
     
     try {
       const response = await axios.post("/api/products", data, {
         headers: {
-          "Content-Type": "multipart/form-data" // Fixed typo from original code
+          "Content-Type": "multipart/form-data"
         }
       });
       
@@ -85,6 +135,37 @@ const AddProduct = () => {
                   onChange={handleInputChange}
                   placeholder="Product Name"
                   required
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} className="mb-3" controlId="productDescription">
+              <Form.Label column sm="2">
+                Description
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Product Description (optional)"
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} className="mb-3" controlId="productCategory">
+              <Form.Label column sm="2">
+                Category
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  placeholder="Product Category (optional)"
                 />
               </Col>
             </Form.Group>
